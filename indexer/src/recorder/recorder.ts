@@ -41,6 +41,8 @@ export class BatchEventRecorder implements IEventRecorder {
   private artifactNamespaces: ArtifactNamespace[];
   private contributorNamespaces: ContributorNamespace[];
   private actorsLoaded: boolean;
+  private waitQueue: Record<string, Array<() => void>>;
+  private isFlushing: Record<string, boolean>;
 
   constructor(prisma: PrismaClient, options?: BatchEventRecorderOptions) {
     this.prisma = prisma;
@@ -51,6 +53,9 @@ export class BatchEventRecorder implements IEventRecorder {
     this.artifactNamespaces = [];
     this.contributorNamespaces = [];
     this.actorsLoaded = false;
+    this.waitQueue = {};
+    this.isFlushing = {};
+    this.contributorQueue = []
   }
 
   setActorScope(
@@ -141,7 +146,32 @@ export class BatchEventRecorder implements IEventRecorder {
     return results;
   }
 
-  async wait(eventType: EventType): Promise<void> {
+  wait(eventType: EventType): Promise<void> {
+    if (!this.waitQueue[eventType]) {
+      this.waitQueue[eventType] = [];
+    }
+
+    return new Promise<void>((resolve) => {
+      this.waitQueue[eventType].push(() => {
+        return resolve();
+      })
+
+      if (!this.isFlushing[eventType]) {
+        this.isFlushing[eventType] = true;
+        setImmediate(() => {
+          this.flushQueue(eventType);
+        })
+      }
+    });
+  }
+
+  private async addActors(artifacts: IncompleteArtifact[], contributors: IncompleteContributor[]): Promise<void> {
+    const artifactPromise = new Promise({
+
+    });
+  }
+
+  private async flushQueue(eventType: EventType): Promise<void> {
     if (!this.actorsLoaded) {
       await this.loadActors();
     }
