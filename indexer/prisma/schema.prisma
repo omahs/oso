@@ -207,6 +207,7 @@ model RangedEventPointer {
 
   // The relevant pointer information on where we left off
   pointer   Json
+  version   Int
   startDate DateTime
   endDate   DateTime
 
