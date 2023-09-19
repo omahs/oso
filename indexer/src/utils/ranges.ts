@@ -6,10 +6,22 @@ export interface Range {
 }
 
 export function rangeFromISO(startDateISO: string, endDateISO: string): Range {
+  const startDate = DateTime.fromISO(startDateISO);
+  const endDate = DateTime.fromISO(endDateISO);
+  if (!(startDate.isValid && endDate.isValid)) {
+    throw new Error("range is invalid");
+  }
   return {
-    startDate: DateTime.fromISO(startDateISO),
-    endDate: DateTime.fromISO(endDateISO),
+    startDate: startDate,
+    endDate: endDate,
   };
+}
+
+export function rangeFromObj(obj: {
+  startDate: string;
+  endDate: string;
+}): Range {
+  return rangeFromISO(obj.startDate, obj.endDate);
 }
 
 export function rangesEqual(a: Range, b: Range): boolean {

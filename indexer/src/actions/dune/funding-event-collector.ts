@@ -23,6 +23,7 @@ import {
   IncompleteEvent,
 } from "../../recorder/types.js";
 import {
+  TimeSeriesCacheLookup,
   TimeSeriesCacheManager,
   TimeSeriesCacheWrapper,
 } from "../../cacher/time-series.js";
@@ -140,6 +141,7 @@ export class FundingEventsCollector {
         "mainnet",
       ],
     ];
+
     // Create contributor groups
     const fundingAddressesAsContributors: IncompleteContributor[] =
       fundingAddressesRaw.map((r) => {
@@ -188,6 +190,10 @@ export class FundingEventsCollector {
           };
         });
     });
+    const addressLookupMap: Record<
+      string,
+      (typeof projectAddressesInput)[number]
+    > = {};
 
     const projectAddressesMap = projectAddressesInput.reduce<
       Record<string, IncompleteArtifact>
@@ -202,21 +208,20 @@ export class FundingEventsCollector {
 
     // Create a lookup
     const responses = this.cache.loadCachedOrRetrieve(
-      {
-        range: {
+      TimeSeriesCacheLookup.new(
+        this.options.cacheOptions.bucket,
+        projectAddressesInput.map((a) => a.address),
+        {
           startDate: startRange,
           endDate: endRange,
         },
-        bucket: this.options.cacheOptions.bucket,
-        key: "generic",
-        normalizingUnit: "day",
-      },
-      async (missingRange) => {
+      ),
+      async (missing) => {
         return this.client.getFundingEvents(
-          missingRange.startDate,
-          missingRange.endDate,
+          missing.range.startDate,
+          missing.range.endDate,
           fundingAddressesInput,
-          projectAddressesInput,
+          missing.keys.map((a) => addressLookupMap[a]),
         );
       },
     );
@@ -239,6 +244,7 @@ export class FundingEventsCollector {
           eventType: EventType.FUNDING,
           artifact: artifact,
           contributor: contributor,
+
           // Worried this could fail on very large values
           amount: amountAsFloat,
           details: {
