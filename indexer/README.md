@@ -4,56 +4,13 @@
 
 ### Setup
 
-Pre-requisites:
+Install [TimescaleDB](https://docs.timescale.com/self-hosted/latest/install/) locally for development.
 
-- [Docker runtime](https://docs.docker.com/engine/install/) - for running a local Supabase instance
+_It is recommended you test any code changes against a development database first. Please do not develop against the production database._
 
-It is recommended you test any code changes against a development Supabase instance first.
-Please do not develop against the production database.
-This script will run a local Supabase server as a background service using docker.
-
-```bash
-pnpm install
-pnpm db:start
-# pnpm db:stop   # to stop the background service
-```
-
-After starting the Supabase instance, you will get the URL and keys.
 Copy `.env.example` to `.env` and populate the `DATABASE_URL`.
 
-> Note: It is also possible to create a new throwaway project on supabase.com and use that instead.
-
-### Database configuration
-
-We use the following Postgres extensions, please make sure to enable them in your database
-
-- [timescaledb](https://supabase.com/docs/guides/database/extensions/timescaledb)
-
-### Dumping the database
-
-Since we are using Supabase for now, their CLI has some nice shortcuts:
-
-First [login to Supabase](https://supabase.com/docs/reference/cli/supabase-login)
-
-```bash
-pnpm supabase login
-```
-
-Note: If this just hangs, it might be an [issue with your window manager keychain](https://github.com/supabase/cli/issues/1000).
-
-[Link](https://supabase.com/docs/reference/cli/supabase-link) to the remote database
-
-```bash
-pnpm supabase link --project-ref REFERENCE_ID
-```
-
-Then run [Supabase dump](https://supabase.com/docs/reference/cli/supabase-db-dump)
-
-```bash
-pnpm supabase db dump -f /tmp/backup.sql
-```
-
-## Typescript
+## TypeScript / JavaScript
 
 ### Setup
 
